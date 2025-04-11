@@ -12,24 +12,24 @@
     #define TEST_NOPS 10
 #endif
 
-#define SIZE (uint32_t)(32 * 1024 * 1024)
-// #define HEAT_COEF 10
-#define TESTS 5
+#define SIZE (uint32_t)(1024 * 1024 * 20)
 
-uint32_t heat(uint32_t* array, uint32_t size){
+void used(long value) {
+    asm volatile("" : "+r"(value));
+}
+
+void heat(uint32_t* array, uint32_t size){
     uint32_t t = 0;
-    // for (uint8_t k = 0; k < HEAT_COEF; ++k){
     for (uint32_t i = 0; i < size; ++i){
         t = array[t];
     }
-    // }
-    return t;
+    used(t);
 }
 
 void swap(uint32_t* first, uint32_t* second){
-    uint32_t* temp = second;
+    uint32_t temp = *second;
     (*second) = (*first);
-    (*first) = (*temp);
+    (*first) = temp;
 }
 
 void shuffle(uint32_t* array, uint32_t size){
@@ -52,30 +52,26 @@ void printAnArray(uint32_t* array, uint32_t size){
     printf("\n");
 }
 
-uint32_t memoryReorderBufferVolumeTest(uint32_t* array, uint32_t size){
+void memoryReorderBufferVolumeTest(uint32_t* array, uint32_t operations){
     uint32_t k = 0;
 
     uint64_t beg = __builtin_ia32_rdtsc();
 
-    for (uint32_t i = 0; i < size; ++i){
+    for (uint32_t i = 0; i < operations; ++i){
         k = array[k];
         GEN_NOPS(TEST_NOPS);
     }
 
     uint64_t end = __builtin_ia32_rdtsc();
-    printf("%.3lf ", (double)(end - beg) / (double)size);
-    return k;
+    printf("%.3lf ", (double)(end - beg) / (double)operations);
+    used(k);
 }
 
-int main(){
-    uint32_t smth = 0;
-    uint32_t * array = (uint32_t *)malloc(SIZE * sizeof(uint32_t));
-    for (uint8_t i = 0; i < TESTS; ++i){
-        srand(time(NULL));
-        fillAnArray(array, SIZE);
-        smth += heat(array, SIZE);
-        smth += memoryReorderBufferVolumeTest(array, SIZE);
-    }
-    printf("%d\n", smth);
+int main(){\
+    srand(time(NULL));
+    uint32_t * array = (uint32_t *)malloc(SIZE);
+    fillAnArray(array, SIZE / sizeof(uint32_t));
+    heat(array, SIZE / sizeof(uint32_t));
+    memoryReorderBufferVolumeTest(array, SIZE);
     return 0;
 }
