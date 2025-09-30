@@ -1,0 +1,34 @@
+C=gcc
+
+ASMFLAGS = -S
+OPTIMIZATION = -O0
+CORE_DIR = ./
+OUTPUT_DIR = ../output
+
+TARGET_PENALTY = $(OUTPUT_DIR)/penalty
+PENALTY_SRC = $(CORE_DIR)/penalty.c
+
+FLAGS = -Wall -Wextra -DNUM_OF_BRANCHES=$(NUM_OF_BRANCHES) -I/usr/local/include -L/usr/local/lib -Wl,-rpath-link=/usr/local/lib -lpapi
+DEBUG_FLAGS = -g
+
+all: TARGET
+
+clean:
+	rm -f $(OUTPUT_DIR)/penalty
+
+debug: clean PENALTY_D
+
+TARGET: PENALTY
+
+PENALTY: PENALTY_O PENALTY_S
+
+PENALTY_O:
+		$(CC) $(PENALTY_SRC) $(FLAGS) $(OPTIMIZATION) -o $(TARGET_PENALTY)
+
+PENALTY_S:
+		$(CC) $(PENALTY_SRC) $(ASMFLAGS) $(FLAGS) $(OPTIMIZATION) -o $(TARGET_PENALTY).s
+
+PENALTY_D:
+		$(CC) $(PENALTY_SRC) $(FLAGS) $(DEBUG_FLAGS) $(OPTIMIZATION) -o $(TARGET_PENALTY)
+
+
